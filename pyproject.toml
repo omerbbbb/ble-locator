@@ -1,0 +1,47 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ble-locator"
+version = "3.2.0"
+description = "BLE Locator — BLE indoor positioning system"
+requires-python = ">=3.12"
+dependencies = [
+    "bleak>=0.22",
+    "numpy>=1.26",
+    "scipy>=1.12",
+    "PyQt6==6.11.0",
+    "PyQt6-Qt6==6.11.0",
+    "qasync>=0.27",
+    "websockets>=12.0",
+    "zeroconf>=0.130",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "pyinstaller>=6.0",
+]
+
+[project.scripts]
+ble-locator = "main:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.hatch.build.targets.wheel]
+packages = [
+    "core",
+    "engine",
+    "filtering",
+    "sensor",
+    "services",
+    "storage",
+    "net",
+    "antennas",
+    "traceability",
+    "ui",
+]

@@ -1,0 +1,11 @@
+bleak>=0.22
+numpy>=1.26
+scipy>=1.12
+PyQt6==6.11.0
+PyQt6-Qt6==6.11.0
+qasync>=0.27
+websockets>=12.0
+zeroconf>=0.130
+
+# build-time only (standalone .app)
+pyinstaller>=6.0

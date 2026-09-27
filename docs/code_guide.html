@@ -1,0 +1,1707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BLE Locator — Code Guide</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+     background:#0f172a;color:#cbd5e1;font-size:14px;display:flex;
+     flex-direction:column;height:100vh;overflow:hidden;}
+header{padding:10px 16px;background:#1e293b;border-bottom:1px solid #334155;
+       display:flex;align-items:center;gap:12px;flex-shrink:0;}
+header h1{font-size:15px;font-weight:600;color:#f1f5f9;}
+header .gen{font-size:12px;color:#64748b;margin-left:auto;}
+#search{flex:1;max-width:340px;padding:5px 10px;background:#0f172a;
+        border:1px solid #334155;border-radius:6px;color:#f1f5f9;font-size:13px;}
+#search::placeholder{color:#64748b;}
+.main{display:flex;flex:1;overflow:hidden;}
+.tree{width:280px;flex-shrink:0;overflow-y:auto;border-right:1px solid #1e293b;
+      padding:8px 4px;background:#0f172a;}
+.folder-header{display:flex;align-items:center;gap:6px;padding:5px 8px;
+               border-radius:6px;cursor:pointer;user-select:none;}
+.folder-header:hover{background:#1e293b;}
+.folder-caret{font-size:12px;flex-shrink:0;}
+.folder-name{font-size:13px;font-weight:600;}
+.folder-hint{font-size:10px;color:#64748b;}
+.folder-children{margin-left:16px;border-left:1px solid #1e293b;
+                 padding-left:6px;display:none;}
+.folder-children.open{display:block;}
+.file-row{display:flex;align-items:center;gap:6px;padding:3px 8px;
+          border-radius:6px;cursor:pointer;font-size:12px;color:#94a3b8;}
+.file-row:hover,.file-row.sel{background:#1e3a5f;color:#60a5fa;}
+.detail{flex:1;overflow-y:auto;padding:20px 24px;}
+.detail-empty{display:flex;align-items:center;justify-content:center;
+              height:80%;color:#475569;font-size:13px;}
+.folder-banner{background:#1e293b;border-radius:8px;padding:12px 16px;
+               margin-bottom:16px;border-left:3px solid;}
+.folder-banner-name{font-size:16px;font-weight:600;margin-bottom:4px;}
+.folder-banner-desc{font-size:13px;color:#94a3b8;line-height:1.55;}
+.dp-badge{display:inline-block;font-size:10px;font-weight:600;
+          padding:2px 8px;border-radius:10px;margin-bottom:8px;}
+.dp-title{font-size:15px;font-weight:600;color:#f1f5f9;margin-bottom:4px;}
+.dp-path{font-family:ui-monospace,monospace;font-size:11px;color:#60a5fa;
+         background:#1e3a5f;padding:2px 8px;border-radius:4px;
+         display:inline-block;margin-bottom:10px;cursor:pointer;user-select:all;}
+.dp-path:hover{text-decoration:underline;}
+.dp-doc{font-size:13px;color:#94a3b8;line-height:1.65;margin-bottom:14px;}
+.dp-no-doc{font-size:12px;color:#475569;font-style:italic;margin-bottom:14px;}
+.divider{border:none;border-top:1px solid #1e293b;margin:12px 0;}
+.items-label{font-size:10px;text-transform:uppercase;letter-spacing:.06em;
+             color:#475569;font-weight:600;margin-bottom:8px;}
+.item-card{background:#1e293b;border-radius:6px;padding:8px 12px;margin-bottom:5px;}
+.item-fn{border-left:3px solid #3b82f6;}
+.item-cl{border-left:3px solid #a78bfa;}
+.item-sig{font-family:ui-monospace,monospace;font-size:12px;color:#93c5fd;}
+.item-doc{font-size:12px;color:#64748b;margin-top:4px;line-height:1.5;}
+.item-no-doc{font-size:11px;color:#374151;font-style:italic;margin-top:3px;}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>BLE Locator — Code Guide</h1>
+  <input id="search" type="text" placeholder="Search files, classes, functions..."
+         oninput="onSearch()" autocomplete="off"/>
+  <span class="gen">Generated 2026-06-19 02:40</span>
+</header>
+
+<div class="main">
+  <div class="tree" id="tree"></div>
+  <div class="detail" id="detail">
+    <div class="detail-empty">Select a file or folder from the tree.</div>
+  </div>
+</div>
+
+<script>
+const DATA        = {
+  "core/events.py": {
+    "module_doc": "",
+    "items": [
+      {
+        "kind": "class",
+        "name": "TraceEvent",
+        "doc": "",
+        "line": 9
+      },
+      {
+        "kind": "class",
+        "name": "SignalReceivedEvent",
+        "doc": "",
+        "line": 15
+      },
+      {
+        "kind": "class",
+        "name": "SignalFilteredEvent",
+        "doc": "",
+        "line": 23
+      },
+      {
+        "kind": "class",
+        "name": "DistanceEstimatedEvent",
+        "doc": "",
+        "line": 31
+      },
+      {
+        "kind": "class",
+        "name": "PositionEstimatedEvent",
+        "doc": "",
+        "line": 41
+      },
+      {
+        "kind": "class",
+        "name": "PositionSmoothedEvent",
+        "doc": "",
+        "line": 49
+      },
+      {
+        "kind": "class",
+        "name": "NoPositionEvent",
+        "doc": "",
+        "line": 58
+      }
+    ]
+  },
+  "core/interfaces.py": {
+    "module_doc": "",
+    "items": [
+      {
+        "kind": "class",
+        "name": "ISignalScanner",
+        "doc": "",
+        "line": 10
+      },
+      {
+        "kind": "class",
+        "name": "ISignalFilter",
+        "doc": "",
+        "line": 18
+      },
+      {
+        "kind": "class",
+        "name": "IPositionEstimator",
+        "doc": "",
+        "line": 26
+      },
+      {
+        "kind": "class",
+        "name": "ICalibrationRepository",
+        "doc": "",
+        "line": 31
+      },
+      {
+        "kind": "class",
+        "name": "ITraceListener",
+        "doc": "",
+        "line": 37
+      },
+      {
+        "kind": "class",
+        "name": "ITraceabilityService",
+        "doc": "",
+        "line": 42
+      },
+      {
+        "kind": "function",
+        "name": "start",
+        "doc": "",
+        "line": 11
+      },
+      {
+        "kind": "function",
+        "name": "stop",
+        "doc": "",
+        "line": 12
+      },
+      {
+        "kind": "function",
+        "name": "get_active",
+        "doc": "",
+        "line": 13
+      },
+      {
+        "kind": "function",
+        "name": "get_reading",
+        "doc": "",
+        "line": 14
+      },
+      {
+        "kind": "function",
+        "name": "filter",
+        "doc": "",
+        "line": 19
+      },
+      {
+        "kind": "function",
+        "name": "reset",
+        "doc": "",
+        "line": 20
+      },
+      {
+        "kind": "function",
+        "name": "value",
+        "doc": "",
+        "line": 22
+      },
+      {
+        "kind": "function",
+        "name": "estimate",
+        "doc": "",
+        "line": 27
+      },
+      {
+        "kind": "function",
+        "name": "load",
+        "doc": "",
+        "line": 32
+      },
+      {
+        "kind": "function",
+        "name": "save",
+        "doc": "",
+        "line": 33
+      },
+      {
+        "kind": "function",
+        "name": "on_event",
+        "doc": "",
+        "line": 38
+      },
+      {
+        "kind": "function",
+        "name": "emit",
+        "doc": "",
+        "line": 43
+      },
+      {
+        "kind": "function",
+        "name": "add_listener",
+        "doc": "",
+        "line": 44
+      }
+    ]
+  },
+  "core/models.py": {
+    "module_doc": "",
+    "items": [
+      {
+        "kind": "class",
+        "name": "SignalType",
+        "doc": "",
+        "line": 9
+      },
+      {
+        "kind": "class",
+        "name": "SignalReading",
+        "doc": "",
+        "line": 17
+      },
+      {
+        "kind": "class",
+        "name": "Anchor",
+        "doc": "",
+        "line": 32
+      },
+      {
+        "kind": "class",
+        "name": "AnchorMeasurement",
+        "doc": "",
+        "line": 43
+      },
+      {
+        "kind": "class",
+        "name": "DeviceEstimate",
+        "doc": "",
+        "line": 50
+      },
+      {
+        "kind": "class",
+        "name": "PositionResult",
+        "doc": "",
+        "line": 62
+      },
+      {
+        "kind": "function",
+        "name": "display_name",
+        "doc": "",
+        "line": 72
+      }
+    ]
+  },
+  "core/platform.py": {
+    "module_doc": "Platform detection and scanner factory.",
+    "items": [
+      {
+        "kind": "class",
+        "name": "PlatformCapabilities",
+        "doc": "",
+        "line": 15
+      },
+      {
+        "kind": "function",
+        "name": "detect",
+        "doc": "",
+        "line": 23
+      },
+      {
+        "kind": "function",
+        "name": "create_scanners",
+        "doc": "Returns a list of ISignalScanner instances for this platform.",
+        "line": 54
+      },
+      {
+        "kind": "function",
+        "name": "_exists",
+        "doc": "",
+        "line": 72
+      }
+    ]
+  },
+  "engine/distance.py": {
+    "module_doc": "",
+    "items": [
+      {
+        "kind": "function",
+        "name": "rssi_to_distance",
+        "doc": "",
+        "line": 4
+      },
+      {
+        "kind": "function",
+        "name": "distance_to_rssi",
+        "doc": "",
+        "line": 11
+      }
+    ]
+  },
+  "engine/fingerprint.py": {
+    "module_doc": "",
+    "items": []
+  },
+  "engine/particle_filter.py": {
+    "module_doc": "",
+    "items": []
+  },
+  "engine/trilateration.py": {
+    "module_doc": "",
+    "items": [
+      {
+        "kind": "class",
+        "name": "TrilaterationEstimator",
+        "doc": "",
+        "line": 9
+      },
+      {
+        "kind": "function",
+        "name": "__init__",
+        "doc": "",
+        "line": 10
+      },
+      {
+        "kind": "function",
+        "name": "estimate",
+        "doc": "",
+        "line": 14
+      },
+      {
+        "kind": "function",
+        "name": "_compute_uncertainty",
+        "doc": "",
+        "line": 40
+      },
+      {
+        "kind": "function",
+        "name": "uncertainty_radius",
+        "doc": "",
+        "line": 60
+      },
+      {
+        "kind": "function",
+        "name": "uncertainty_ellipse",
+        "doc": "",
+        "line": 64
+      },
+      {
+        "kind": "function",
+        "name": "residuals",
+        "doc": "",
+        "line": 23
+      }
+    ]
+  },
+  "filtering/filter_bank.py": {
+    "module_doc": "",
+    "items": [
+      {
+        "kind": "class",
+        "name": "FilterBank",
+        "doc": "Manages one ISignalFilter per device, created on demand via a factory.",
+        "line": 6
+      },
+      {
+        "kind": "function",
+        "name": "__init__",
+        "doc": "",
+        "line": 9
+      },
+      {
+        "kind": "function",
+        "name": "apply",
+        "doc": "",
+        "line": 13
+      },
+      {
+        "kind": "function",
+        "name": "reset_device",
+        "doc": "",
+        "line": 18
+      },
+      {
+        "kind": "function",
+        "name": "reset_all",
+        "doc": "",
+        "line": 23
+      }
+    ]
+  },
+  "filtering/kalman_filter.py": {
+    "module_doc": "",
+    "items": [
+      {
+        "kind": "class",
+        "name": "KalmanFilter",
+        "doc": "1D Kalman filter for smoothing a noisy signal stream.",
+        "line": 4
+      },
+      {
+        "kind": "function",
+        "name": "__init__",
+        "doc": "",
+        "line": 11
+      },
+      {
+        "kind": "function",
+        "name": "filter",
+        "doc": "",
+        "line": 17
+      },
+      {
+        "kind": "function",
+        "name": "reset",
+        "doc": "",
+        "line": 30
+      },
+      {
+        "kind": "function",
+        "name": "value",
+        "doc": "",
+        "line": 35
+      }
+    ]
+  },
+  "main.py": {
+    "module_doc": "",
+    "items": [
+      {
+        "kind": "function",
+        "name": "main",
+        "doc": "",
+        "line": 24
+      },
+      {
+        "kind": "function",
+        "name": "_run",
+        "doc": "",
+        "line": 78
+      },
+      {
+        "kind": "function",
+        "name": "run_loop",
+        "doc": "",
+        "line": 67
+      }
+    ]
+  },
+  "sensor/ble_scanner.py": {
+    "module_doc": "",
+    "items": [
+      {
+        "kind": "function",
+        "name": "_resolve_manufacturer",
+        "doc": "",
+        "line": 41
+      },
+      {
+        "kind": "function",
+        "name": "_resolve_name",
+        "doc": "",
+        "line": 51
+      },
+      {
+        "kind": "class",
+        "name": "BLEScannerImpl",
+        "doc": "",
+        "line": 64
+      },
+      {
+        "kind": "function",
+        "name": "__init__",
+        "doc": "",
+        "line": 65
+      },
+      {
+        "kind": "function",
+        "name": "_detection_callback",
+        "doc": "",
+        "line": 70
+      },
+      {
+        "kind": "function",
+        "name": "start",
+        "doc": "",
+        "line": 91
+      },
+      {
+        "kind": "function",
+        "name": "stop",
+        "doc": "",
+        "line": 98
+      },
+      {
+        "kind": "function",
+        "name": "get_active",
+        "doc": "",
+        "line": 106
+      },
+      {
+        "kind": "function",
+        "name": "get_reading",
+        "doc": "",
+        "line": 113
+      }
+    ]
+  },
+  "sensor/mock_scanner.py": {
+    "module_doc": "",
+    "items": [
+      {
+        "kind": "class",
+        "name": "MockScanner",
+        "doc": "Synthetic RSSI generator — no physical hardware needed.",
+        "line": 9
+      },
+      {
+        "kind": "function",
+        "name": "__init__",
+        "doc": "",
+        "line": 16
+      },
+      {
+        "kind": "function",
+        "name": "start",
+        "doc": "",
+        "line": 32
+      },
+      {
+        "kind": "function",
+        "name": "stop",
+        "doc": "",
+        "line": 36
+      },
+      {
+        "kind": "function",
+        "name": "set_position",
+        "doc": "",
+        "line": 39
+      },
+      {
+        "kind": "function",
+        "name": "get_active",
+        "doc": "",
+        "line": 43
+      },
+      {
+        "kind": "function",
+        "name": "get_reading",
+        "doc": "",
+        "line": 47
+      },
+      {
+        "kind": "function",
+        "name": "_refresh",
+        "doc": "",
+        "line": 50
+      }
+    ]
+  },
+  "sensor/multi_scanner.py": {
+    "module_doc": "",
+    "items": [
+      {
+        "kind": "class",
+        "name": "MultiScanner",
+        "doc": "Aggregates readings from multiple ISignalScanner instances.",
+        "line": 7
+      },
+      {
+        "kind": "function",
+        "name": "__init__",
+        "doc": "",
+        "line": 14
+      },
+      {
+        "kind": "function",
+        "name": "start",
+        "doc": "",
+        "line": 17
+      },
+      {
+        "kind": "function",
+        "name": "stop",
+        "doc": "",
+        "line": 21
+      },
+      {
+        "kind": "function",
+        "name": "get_active",
+        "doc": "",
+        "line": 25
+      },
+      {
+        "kind": "function",
+        "name": "get_reading",
+        "doc": "",
+        "line": 31
+      }
+    ]
+  },
+  "sensor/wifi_macos.py": {
+    "module_doc": "WiFi scanner for macOS using CoreWLAN (pyobjc).",
+    "items": [
+      {
+        "kind": "function",
+        "name": "_request_location_permission",
+        "doc": "Ask macOS for Location Services access (needed for SSID/BSSID).",
+        "line": 19
+      },
+      {
+        "kind": "class",
+        "name": "MacOSWifiScanner",
+        "doc": "",
+        "line": 29
+      },
+      {
+        "kind": "function",
+        "name": "__init__",
+        "doc": "",
+        "line": 30
+      },
+      {
+        "kind": "function",
+        "name": "start",
+        "doc": "",
+        "line": 36
+      },
+      {
+        "kind": "function",
+        "name": "stop",
+        "doc": "",
+        "line": 52
+      },
+      {
+        "kind": "function",
+        "name": "get_active",
+        "doc": "",
+        "line": 58
+      },
+      {
+        "kind": "function",
+        "name": "get_reading",
+        "doc": "",
+        "line": 65
+      },
+      {
+        "kind": "function",
+        "name": "_scan_loop",
+        "doc": "",
+        "line": 68
+      },
+      {
+        "kind": "function",
+        "name": "_do_scan",
+        "doc": "",
+        "line": 76
+      },
+      {
+        "kind": "function",
+        "name": "_channel_to_freq",
+        "doc": "",
+        "line": 125
+      }
+    ]
+  },
+  "sensor/wifi_scanner.py": {
+    "module_doc": "",
+    "items": []
+  },
+  "services/anchor_store.py": {
+    "module_doc": "",
+    "items": [
+      {
+        "kind": "class",
+        "name": "AnchorStore",
+        "doc": "",
+        "line": 7
+      },
+      {
+        "kind": "function",
+        "name": "__init__",
+        "doc": "",
+        "line": 8
+      },
+      {
+        "kind": "function",
+        "name": "all",
+        "doc": "",
+        "line": 12
+      },
+      {
+        "kind": "function",
+        "name": "get",
+        "doc": "",
+        "line": 15
+      },
+      {
+        "kind": "function",
+        "name": "is_anchor",
+        "doc": "",
+        "line": 18
+      },
+      {
+        "kind": "function",
+        "name": "set",
+        "doc": "",
+        "line": 21
+      },
+      {
+        "kind": "function",
+        "name": "remove",
+        "doc": "",
+        "line": 25
+      }
+    ]
+  },
+  "services/positioning_service.py": {
+    "module_doc": "",
+    "items": [
+      {
+        "kind": "class",
+        "name": "PositioningService",
+        "doc": "",
+        "line": 26
+      },
+      {
+        "kind": "function",
+        "name": "__init__",
+        "doc": "",
+        "line": 32
+      },
+      {
+        "kind": "function",
+        "name": "update",
+        "doc": "",
+        "line": 47
+      },
+      {
+        "kind": "function",
+        "name": "_solve",
+        "doc": "",
+        "line": 111
+      },
+      {
+        "kind": "function",
+        "name": "_status",
+        "doc": "",
+        "line": 145
+      }
+    ]
+  },
+  "storage/json_repository.py": {
+    "module_doc": "",
+    "items": [
+      {
+        "kind": "class",
+        "name": "JsonCalibrationRepository",
+        "doc": "",
+        "line": 13
+      },
+      {
+        "kind": "function",
+        "name": "__init__",
+        "doc": "",
+        "line": 14
+      },
+      {
+        "kind": "function",
+        "name": "load",
+        "doc": "",
+        "line": 17
+      },
+      {
+        "kind": "function",
+        "name": "save",
+        "doc": "",
+        "line": 37
+      },
+      {
+        "kind": "function",
+        "name": "_json_default",
+        "doc": "",
+        "line": 48
+      }
+    ]
+  },
+  "traceability/event_bus.py": {
+    "module_doc": "",
+    "items": [
+      {
+        "kind": "class",
+        "name": "EventBus",
+        "doc": "",
+        "line": 7
+      },
+      {
+        "kind": "function",
+        "name": "__init__",
+        "doc": "",
+        "line": 8
+      },
+      {
+        "kind": "function",
+        "name": "emit",
+        "doc": "",
+        "line": 11
+      },
+      {
+        "kind": "function",
+        "name": "add_listener",
+        "doc": "",
+        "line": 15
+      },
+      {
+        "kind": "function",
+        "name": "remove_listener",
+        "doc": "",
+        "line": 18
+      }
+    ]
+  },
+  "traceability/log_explainer.py": {
+    "module_doc": "",
+    "items": [
+      {
+        "kind": "class",
+        "name": "LogExplainer",
+        "doc": "Translates system events into human-readable text.",
+        "line": 15
+      },
+      {
+        "kind": "function",
+        "name": "__init__",
+        "doc": "",
+        "line": 22
+      },
+      {
+        "kind": "function",
+        "name": "on_event",
+        "doc": "",
+        "line": 25
+      },
+      {
+        "kind": "function",
+        "name": "_format",
+        "doc": "",
+        "line": 31
+      }
+    ]
+  },
+  "ui/ab_benchmark.py": {
+    "module_doc": "Benchmark tab: comparison table + accuracy-over-time chart.",
+    "items": [
+      {
+        "kind": "class",
+        "name": "_AccuracyChart",
+        "doc": "Draws uncertainty radius over time for each tracked configuration.",
+        "line": 34
+      },
+      {
+        "kind": "class",
+        "name": "ABBenchmark",
+        "doc": "Benchmark tab with explanation, comparison table, and accuracy chart.",
+        "line": 127
+      },
+      {
+        "kind": "function",
+        "name": "__init__",
+        "doc": "",
+        "line": 37
+      },
+      {
+        "kind": "function",
+        "name": "add_point",
+        "doc": "",
+        "line": 44
+      },
+      {
+        "kind": "function",
+        "name": "clear",
+        "doc": "",
+        "line": 52
+      },
+      {
+        "kind": "function",
+        "name": "paintEvent",
+        "doc": "",
+        "line": 58
+      },
+      {
+        "kind": "function",
+        "name": "_clear",
+        "doc": "",
+        "line": 207
+      },
+      {
+        "kind": "function",
+        "name": "record",
+        "doc": "",
+        "line": 214
+      }
+    ]
+  },
+  "ui/ab_split.py": {
+    "module_doc": "A/B split-screen: two side-by-side radars with independent controls.",
+    "items": [
+      {
+        "kind": "class",
+        "name": "_FilteredPane",
+        "doc": "One half of the split screen — a radar with filter controls.",
+        "line": 26
+      },
+      {
+        "kind": "class",
+        "name": "ABSplitView",
+        "doc": "Two filtered panes side by side for visual A/B comparison.",
+        "line": 121
+      },
+      {
+        "kind": "function",
+        "name": "__init__",
+        "doc": "",
+        "line": 29
+      },
+      {
+        "kind": "function",
+        "name": "signal_filter",
+        "doc": "",
+        "line": 88
+      },
+      {
+        "kind": "function",
+        "name": "show_mode",
+        "doc": "",
+        "line": 92
+      },
+      {
+        "kind": "function",
+        "name": "set_devices",
+        "doc": "",
+        "line": 95
+      },
+      {
+        "kind": "function",
+        "name": "_refilter",
+        "doc": "",
+        "line": 99
+      }
+    ]
+  },
+  "ui/antenna_view.py": {
+    "module_doc": "Per-antenna visualization: signal quality and accuracy breakdown by radio type.",
+    "items": [
+      {
+        "kind": "class",
+        "name": "AntennaView",
+        "doc": "Paints per-radio-type signal quality cards.",
+        "line": 27
+      },
+      {
+        "kind": "function",
+        "name": "__init__",
+        "doc": "",
+        "line": 30
+      },
+      {
+        "kind": "function",
+        "name": "set_devices",
+        "doc": "",
+        "line": 35
+      },
+      {
+        "kind": "function",
+        "name": "paintEvent",
+        "doc": "",
+        "line": 39
+      },
+      {
+        "kind": "function",
+        "name": "_draw_card",
+        "doc": "",
+        "line": 74
+      }
+    ]
+  },
+  "ui/charts.py": {
+    "module_doc": "RSSI-over-time chart drawn with QPainter — no matplotlib dependency.",
+    "items": [
+      {
+        "kind": "class",
+        "name": "RSSIChart",
+        "doc": "",
+        "line": 22
+      },
+      {
+        "kind": "function",
+        "name": "__init__",
+        "doc": "",
+        "line": 23
+      },
+      {
+        "kind": "function",
+        "name": "add_reading",
+        "doc": "",
+        "line": 31
+      },
+      {
+        "kind": "function",
+        "name": "clear_history",
+        "doc": "",
+        "line": 42
+      },
+      {
+        "kind": "function",
+        "name": "paintEvent",
+        "doc": "",
+        "line": 49
+      },
+      {
+        "kind": "function",
+        "name": "to_screen",
+        "doc": "",
+        "line": 75
+      }
+    ]
+  },
+  "ui/device_panel.py": {
+    "module_doc": "",
+    "items": [
+      {
+        "kind": "function",
+        "name": "rssi_color",
+        "doc": "",
+        "line": 29
+      },
+      {
+        "kind": "class",
+        "name": "AnchorDialog",
+        "doc": "",
+        "line": 38
+      },
+      {
+        "kind": "class",
+        "name": "DevicePanel",
+        "doc": "",
+        "line": 105
+      },
+      {
+        "kind": "function",
+        "name": "__init__",
+        "doc": "",
+        "line": 39
+      },
+      {
+        "kind": "function",
+        "name": "set_distances",
+        "doc": "",
+        "line": 184
+      },
+      {
+        "kind": "function",
+        "name": "_set_filter",
+        "doc": "",
+        "line": 187
+      },
+      {
+        "kind": "function",
+        "name": "update_readings",
+        "doc": "",
+        "line": 194
+      },
+      {
+        "kind": "function",
+        "name": "_selected_device_id",
+        "doc": "",
+        "line": 241
+      },
+      {
+        "kind": "function",
+        "name": "_on_item_double_clicked",
+        "doc": "",
+        "line": 247
+      },
+      {
+        "kind": "function",
+        "name": "_on_set_anchor",
+        "doc": "",
+        "line": 250
+      },
+      {
+        "kind": "function",
+        "name": "_open_anchor_dialog",
+        "doc": "",
+        "line": 255
+      },
+      {
+        "kind": "function",
+        "name": "_on_remove_anchor",
+        "doc": "",
+        "line": 272
+      }
+    ]
+  },
+  "ui/distance_radar.py": {
+    "module_doc": "",
+    "items": [
+      {
+        "kind": "function",
+        "name": "_rssi_color",
+        "doc": "",
+        "line": 13
+      },
+      {
+        "kind": "class",
+        "name": "DistanceRadar",
+        "doc": "",
+        "line": 26
+      },
+      {
+        "kind": "function",
+        "name": "__init__",
+        "doc": "",
+        "line": 29
+      },
+      {
+        "kind": "function",
+        "name": "_mk_btn",
+        "doc": "",
+        "line": 46
+      },
+      {
+        "kind": "function",
+        "name": "set_devices",
+        "doc": "",
+        "line": 58
+      },
+      {
+        "kind": "function",
+        "name": "zoom_in",
+        "doc": "",
+        "line": 69
+      },
+      {
+        "kind": "function",
+        "name": "zoom_out",
+        "doc": "",
+        "line": 73
+      },
+      {
+        "kind": "function",
+        "name": "zoom_reset",
+        "doc": "",
+        "line": 77
+      },
+      {
+        "kind": "function",
+        "name": "wheelEvent",
+        "doc": "",
+        "line": 81
+      },
+      {
+        "kind": "function",
+        "name": "_center",
+        "doc": "",
+        "line": 84
+      },
+      {
+        "kind": "function",
+        "name": "_max_r",
+        "doc": "",
+        "line": 87
+      },
+      {
+        "kind": "function",
+        "name": "_effective_scale",
+        "doc": "",
+        "line": 90
+      },
+      {
+        "kind": "function",
+        "name": "_m_to_px",
+        "doc": "",
+        "line": 94
+      },
+      {
+        "kind": "function",
+        "name": "_angle_of",
+        "doc": "",
+        "line": 97
+      },
+      {
+        "kind": "function",
+        "name": "_hash_angle",
+        "doc": "",
+        "line": 105
+      },
+      {
+        "kind": "function",
+        "name": "_marker_px",
+        "doc": "",
+        "line": 111
+      },
+      {
+        "kind": "function",
+        "name": "_click_angle",
+        "doc": "",
+        "line": 117
+      },
+      {
+        "kind": "function",
+        "name": "_grid_step",
+        "doc": "",
+        "line": 122
+      },
+      {
+        "kind": "function",
+        "name": "resizeEvent",
+        "doc": "",
+        "line": 128
+      },
+      {
+        "kind": "function",
+        "name": "paintEvent",
+        "doc": "",
+        "line": 134
+      },
+      {
+        "kind": "function",
+        "name": "_hit",
+        "doc": "",
+        "line": 207
+      },
+      {
+        "kind": "function",
+        "name": "mousePressEvent",
+        "doc": "",
+        "line": 228
+      },
+      {
+        "kind": "function",
+        "name": "mouseMoveEvent",
+        "doc": "",
+        "line": 246
+      },
+      {
+        "kind": "function",
+        "name": "mouseReleaseEvent",
+        "doc": "",
+        "line": 253
+      }
+    ]
+  },
+  "ui/heatmap.py": {
+    "module_doc": "",
+    "items": []
+  },
+  "ui/main_window.py": {
+    "module_doc": "",
+    "items": [
+      {
+        "kind": "class",
+        "name": "MainWindow",
+        "doc": "",
+        "line": 32
+      },
+      {
+        "kind": "function",
+        "name": "__init__",
+        "doc": "",
+        "line": 36
+      },
+      {
+        "kind": "function",
+        "name": "_setup_ui",
+        "doc": "",
+        "line": 54
+      },
+      {
+        "kind": "function",
+        "name": "start_scanning",
+        "doc": "",
+        "line": 103
+      },
+      {
+        "kind": "function",
+        "name": "stop_scanning",
+        "doc": "",
+        "line": 109
+      },
+      {
+        "kind": "function",
+        "name": "_tick",
+        "doc": "",
+        "line": 114
+      },
+      {
+        "kind": "function",
+        "name": "_apply",
+        "doc": "",
+        "line": 127
+      },
+      {
+        "kind": "function",
+        "name": "_on_anchor_changed",
+        "doc": "",
+        "line": 155
+      },
+      {
+        "kind": "function",
+        "name": "_on_radar_anchor_placed",
+        "doc": "",
+        "line": 162
+      },
+      {
+        "kind": "function",
+        "name": "closeEvent",
+        "doc": "",
+        "line": 182
+      }
+    ]
+  },
+  "ui/room_canvas.py": {
+    "module_doc": "",
+    "items": [
+      {
+        "kind": "class",
+        "name": "RoomCanvas",
+        "doc": "",
+        "line": 14
+      },
+      {
+        "kind": "function",
+        "name": "__init__",
+        "doc": "",
+        "line": 15
+      },
+      {
+        "kind": "function",
+        "name": "_mk_btn",
+        "doc": "",
+        "line": 41
+      },
+      {
+        "kind": "function",
+        "name": "zoom_in",
+        "doc": "",
+        "line": 54
+      },
+      {
+        "kind": "function",
+        "name": "zoom_out",
+        "doc": "",
+        "line": 58
+      },
+      {
+        "kind": "function",
+        "name": "zoom_reset",
+        "doc": "",
+        "line": 62
+      },
+      {
+        "kind": "function",
+        "name": "zoom_fit",
+        "doc": "",
+        "line": 67
+      },
+      {
+        "kind": "function",
+        "name": "wheelEvent",
+        "doc": "",
+        "line": 72
+      },
+      {
+        "kind": "function",
+        "name": "mousePressEvent",
+        "doc": "",
+        "line": 77
+      },
+      {
+        "kind": "function",
+        "name": "mouseMoveEvent",
+        "doc": "",
+        "line": 87
+      },
+      {
+        "kind": "function",
+        "name": "mouseReleaseEvent",
+        "doc": "",
+        "line": 95
+      },
+      {
+        "kind": "function",
+        "name": "set_position",
+        "doc": "",
+        "line": 101
+      },
+      {
+        "kind": "function",
+        "name": "clear_position",
+        "doc": "",
+        "line": 105
+      },
+      {
+        "kind": "function",
+        "name": "set_anchors",
+        "doc": "",
+        "line": 109
+      },
+      {
+        "kind": "function",
+        "name": "set_distances",
+        "doc": "",
+        "line": 113
+      },
+      {
+        "kind": "function",
+        "name": "set_uncertainty",
+        "doc": "",
+        "line": 117
+      },
+      {
+        "kind": "function",
+        "name": "_margin",
+        "doc": "",
+        "line": 122
+      },
+      {
+        "kind": "function",
+        "name": "_world_to_screen",
+        "doc": "",
+        "line": 125
+      },
+      {
+        "kind": "function",
+        "name": "_draw_circle_at",
+        "doc": "",
+        "line": 137
+      },
+      {
+        "kind": "function",
+        "name": "_grid_step",
+        "doc": "",
+        "line": 149
+      },
+      {
+        "kind": "function",
+        "name": "paintEvent",
+        "doc": "",
+        "line": 157
+      },
+      {
+        "kind": "function",
+        "name": "resizeEvent",
+        "doc": "",
+        "line": 304
+      },
+      {
+        "kind": "function",
+        "name": "_show_context_menu",
+        "doc": "",
+        "line": 311
+      },
+      {
+        "kind": "function",
+        "name": "_set_room_dimensions",
+        "doc": "",
+        "line": 317
+      }
+    ]
+  }
+};
+const FOLDER_DESC  = {"core": "Shared foundation — data shapes, contracts (interfaces), platform detection. Every other layer depends on this; it depends on nothing.", "sensor": "Hardware scanners — BLE (Bluetooth) and WiFi. Run in background threads. Produce SignalReading objects and cache them in a registry.", "filtering": "Signal smoothing — Kalman filters reduce the jitter in raw RSSI readings before they reach the positioning engine.", "engine": "Pure algorithms — converts filtered RSSI to metres, then solves for (x, y) from 3+ distances using Least Squares.", "services": "Business logic — PositioningService orchestrates the full pipeline each tick; AnchorStore is the in-memory anchor database.", "storage": "Persistence — saves and loads anchor calibration to/from ~/Library/Application Support/BLE Locator/calibration.json.", "traceability": "Observer / logging — EventBus lets any component emit typed events that listeners can observe without coupling.", "ui": "All PyQt6 widgets — each widget is passive (receives data, draws it). main_window owns the 1-second tick that drives everything."};
+const FOLDER_COLOR = {"core": "#6b7280", "sensor": "#3b82f6", "filtering": "#06b6d4", "engine": "#8b5cf6", "services": "#f59e0b", "storage": "#ef4444", "traceability": "#ec4899", "ui": "#10b981"};
+
+const openFolders = new Set(['sensor','ui','core','engine','filtering']);
+
+// ── tree ─────────────────────────────────────────────────────────────────────
+function buildTree(filterText) {
+  const tree = document.getElementById('tree');
+  tree.innerHTML = '';
+  const ft = (filterText || '').toLowerCase();
+
+  const folders = {};
+  const topFiles = [];
+
+  for (const path of Object.keys(DATA)) {
+    const slash = path.indexOf('/');
+    if (slash === -1) { topFiles.push(path); continue; }
+    const folder = path.slice(0, slash);
+    (folders[folder] = folders[folder] || []).push(path);
+  }
+
+  for (const [folder, files] of Object.entries(folders)) {
+    const matching = ft ? files.filter(f => matchesSearch(f, ft)) : files;
+    if (ft && matching.length === 0) continue;
+
+    const color  = FOLDER_COLOR[folder] || '#888';
+    const isOpen = openFolders.has(folder) || !!ft;
+    const hint   = (FOLDER_DESC[folder] || '').split(' — ')[0];
+
+    const wrap   = document.createElement('div');
+    const header = document.createElement('div');
+    header.className = 'folder-header';
+
+    const caret = document.createElement('span');
+    caret.className = 'folder-caret';
+    caret.textContent = isOpen ? '▾' : '▸';
+    caret.style.color = color;
+
+    const nameEl = document.createElement('span');
+    nameEl.className = 'folder-name';
+    nameEl.style.color = color;
+    nameEl.textContent = folder + '/';
+
+    const hintEl = document.createElement('span');
+    hintEl.className = 'folder-hint';
+    hintEl.textContent = hint;
+
+    header.appendChild(caret);
+    header.appendChild(nameEl);
+    header.appendChild(hintEl);
+
+    const children = document.createElement('div');
+    children.className = 'folder-children' + (isOpen ? ' open' : '');
+
+    header.onclick = () => {
+      const o = children.classList.toggle('open');
+      caret.textContent = o ? '▾' : '▸';
+      if (o) openFolders.add(folder); else openFolders.delete(folder);
+    };
+    header.ondblclick = e => { e.stopPropagation(); showFolder(folder); };
+
+    (ft ? matching : files).forEach(f => children.appendChild(makeFileRow(f, color)));
+    wrap.appendChild(header);
+    wrap.appendChild(children);
+    tree.appendChild(wrap);
+  }
+
+  topFiles.forEach(f => {
+    if (ft && !matchesSearch(f, ft)) return;
+    tree.appendChild(makeFileRow(f, '#f59e0b'));
+  });
+}
+
+function makeFileRow(path, color) {
+  const row = document.createElement('div');
+  row.className = 'file-row';
+  row.dataset.path = path;
+  const dot = document.createElement('span');
+  dot.style.color = color;
+  dot.textContent = '◆';
+  const label = document.createElement('span');
+  label.textContent = path.split('/').pop();
+  row.appendChild(dot);
+  row.appendChild(label);
+  row.onclick = () => showFile(path);
+  return row;
+}
+
+// ── search ───────────────────────────────────────────────────────────────────
+function matchesSearch(path, term) {
+  if (path.includes(term)) return true;
+  const info = DATA[path];
+  if (!info) return false;
+  if ((info.module_doc || '').toLowerCase().includes(term)) return true;
+  return (info.items || []).some(it =>
+    it.name.toLowerCase().includes(term) ||
+    (it.doc || '').toLowerCase().includes(term)
+  );
+}
+
+function onSearch() {
+  buildTree(document.getElementById('search').value.trim());
+}
+
+// ── detail — folder ──────────────────────────────────────────────────────────
+function showFolder(folder) {
+  const color = FOLDER_COLOR[folder] || '#888';
+  const desc  = FOLDER_DESC[folder] || '';
+  const files = Object.keys(DATA).filter(p => p.startsWith(folder + '/'));
+
+  let html =
+    `<div class="folder-banner" style="border-color:${color}">` +
+    `<div class="folder-banner-name" style="color:${color}">${folder}/</div>` +
+    `<div class="folder-banner-desc">${desc}</div></div>` +
+    `<div class="items-label">Files in ${folder}/</div>`;
+
+  html += files.map(f => {
+    const info = DATA[f];
+    const fname = f.split('/').pop();
+    const doc = info && info.module_doc
+      ? info.module_doc
+      : '<span class="item-no-doc">No module docstring yet.</span>';
+    return `<div class="item-card item-fn" style="cursor:pointer" onclick="showFile('${f}')">` +
+      `<div class="item-sig">${fname}</div>` +
+      `<div class="item-doc">${doc}</div></div>`;
+  }).join('');
+
+  document.getElementById('detail').innerHTML = html;
+}
+
+// ── detail — file ────────────────────────────────────────────────────────────
+function showFile(path) {
+  document.querySelectorAll('.file-row').forEach(r =>
+    r.classList.toggle('sel', r.dataset.path === path));
+
+  const info   = DATA[path];
+  if (!info) return;
+  const folder = path.split('/')[0];
+  const color  = FOLDER_COLOR[folder] || '#888';
+  const fname  = path.split('/').pop();
+
+  let html =
+    `<span class="dp-badge" style="background:${color}22;color:${color}">${folder}</span>` +
+    `<div class="dp-title">${fname}</div>` +
+    `<div class="dp-path" title="click to copy" onclick="copyPath('${path}')">${path}</div>`;
+
+  if (info.error) {
+    html += `<div class="dp-no-doc">Parse error: ${info.error}</div>`;
+  } else if (info.module_doc) {
+    html += `<div class="dp-doc">${info.module_doc}</div>`;
+  } else {
+    html += `<div class="dp-no-doc">No module-level docstring — add one to the top of the file to improve this guide.</div>`;
+  }
+
+  const classes = (info.items || []).filter(i => i.kind === 'class');
+  const fns     = (info.items || []).filter(i => i.kind === 'function');
+
+  if (classes.length) {
+    html += `<hr class="divider"><div class="items-label">Classes</div>`;
+    html += classes.map(c =>
+      `<div class="item-card item-cl">` +
+      `<div class="item-sig">class ${c.name} <span style="color:#475569;font-size:10px">line ${c.line}</span></div>` +
+      (c.doc
+        ? `<div class="item-doc">${c.doc}</div>`
+        : `<div class="item-no-doc">No docstring</div>`) +
+      `</div>`
+    ).join('');
+  }
+
+  if (fns.length) {
+    html += `<hr class="divider"><div class="items-label">Functions & methods</div>`;
+    html += fns.map(f =>
+      `<div class="item-card item-fn">` +
+      `<div class="item-sig">def ${f.name}() <span style="color:#475569;font-size:10px">line ${f.line}</span></div>` +
+      (f.doc
+        ? `<div class="item-doc">${f.doc}</div>`
+        : `<div class="item-no-doc">No docstring</div>`) +
+      `</div>`
+    ).join('');
+  }
+
+  document.getElementById('detail').innerHTML = html;
+}
+
+function copyPath(path) {
+  navigator.clipboard && navigator.clipboard.writeText(path);
+  const el = document.querySelector('.dp-path');
+  if (el) {
+    const orig = el.textContent;
+    el.textContent = '✓ copied';
+    setTimeout(() => { el.textContent = orig; }, 1400);
+  }
+}
+
+buildTree();
+</script>
+</body>
+</html>
